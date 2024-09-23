@@ -5,6 +5,8 @@ export function factorial(n: number): number {
   if (n == 0) {
     return 1;
   }
+  // Introduce a type error
+  const result: string = addNumbers(1, 2);
   return n * factorial(n - 1);
 }
 

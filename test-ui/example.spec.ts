@@ -102,6 +102,7 @@ test('Search for Samuel Pastva on is.muni.cz', async ({ page }) => {
   await searchInput.fill('Samuel Pastva');
   await searchInput.press('Enter');
 
+  await page.waitForTimeout(1000);
   const resultHeader = page.locator('h2:has-text("Samuel Pastva")');
   await expect(resultHeader).toBeVisible();
 

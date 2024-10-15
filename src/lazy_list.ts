@@ -29,30 +29,18 @@ template.innerHTML = `
 export type Renderer<T> = (item: T) => HTMLElement;
 
 export class LazyList<T> extends HTMLElement {
-  // By default, the list renders the items as div-s with strings in them.
   #renderFunction: Renderer<T> = (item) => {
     const element = document.createElement("div");
     element.innerText = JSON.stringify(item);
     return element;
   };
 
-  // These could be useful properties to consider, but not mandatory to use.
-  // Similarly, feel free to edit the shadow DOM template in any way you want.
-
-  // By default, the list is empty.
   #data: T[] = [];
-
-  // The index of the first visible data item.
   #visiblePosition: number = 0;
-
-  // The amount of space that needs to be shown before the first visible item.
   #topOffset: number = 0;
   #topOffsetElement: HTMLElement;
-  // The amount of space that needs to be shown after the last visible item.
   #bottomOffset: number = 0;
   #bottomOffsetElement: HTMLElement;
-
-  // The container that stores the spacer elements and the slot where items are inserted.
   #listElement: HTMLElement;
 
   #itemHeight: number = 50;

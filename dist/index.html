@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>PV252 Example project</title>
+  <script defer src="main.07dee3c48db2067b9f3f.bundle.js"></script></head>
+  <body>
+    <template id="person-template">
+  <div
+    id="site-b"
+    class="uk-card uk-card-body uk-card-default uk-card-hover uk-margin-medium-bottom"
+  >
+    <h3 class="person-name uk-margin-small-bottom"></h3>
+    <div class="person-keywords uk-margin-medium-bottom">
+      <span class="person-continent uk-label"></span>
+      <span class="person-country uk-label"></span>
+      <span class="person-city uk-label"></span>
+    </div>
+    <div class="uk-grid-small" uk-grid>
+      <div class="uk-width-expand" uk-leader>Birth Year</div>
+      <div class="person-year"></div>
+    </div>
+    <div class="uk-grid-small" uk-grid>
+      <div class="uk-width-expand" uk-leader>Industry</div>
+      <div class="person-industry"></div>
+    </div>
+    <div class="uk-grid-small uk-margin-medium-bottom" uk-grid>
+      <div class="uk-width-expand" uk-leader>Occupation</div>
+      <div class="person-occupation"></div>
+    </div>
+    <a
+      class="person-geo-link uk-button uk-button-default"
+      href=""
+      target="_blank"
+      >Go to map</a
+    >
+  </div>
+</template>
+
+    <div class="uk-container my-class-main">
+      <div class="main-menu">
+        <nav class="uk-navbar-container" uk-navbar>
+  <div class="uk-navbar-left">
+    <ul class="uk-navbar-nav uk-margin-large-left uk-margin-large-right">
+      <li class="menu-home"><a href="/">Naive</a></li>
+      <li class="menu-lazy-list"><a href="/lazy.html">Lazy List</a></li>
+    </ul>
+  </div>
+  <div class="uk-navbar-right">
+    <img class="menu-icon uk-margin-large-left uk-margin-large-right" />
+  </div>
+</nav>
+
+      </div>      
+      <div class="uk-grid-medium uk-margin-medium-top" uk-grid>        
+        <div class="uk-width-3-3">
+          <h2>Famous People</h2>
+          <div id="naive-list" class="uk-margin-large-bottom">            
+          </div>
+        </div>        
+      </div>      
+    </div>    
+  </body>
+</html>

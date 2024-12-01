@@ -7,24 +7,15 @@ import { AsyncSha256 } from "./sha-256.js";
  * final hash once computed.
  */
 export class HashElement extends FASTElement {
-  // Time when the computation was started (to compute elapsed time).
-  #started: Date;
-
-  /*
-        Note that all of these are observable properties and not attributes, 
-        because these are not intended to be "parameters" of the element, but
-        rather something that the element is updating internally.
-    */
-
-  // The name of the file that is being processed.
+  // The name of the file being processed.
   @observable
   fileName: string = "";
 
-  // The (approximate) total size of the file.
+  // The total size of the file.
   @observable
   total: number = -1;
 
-  // The (approximate) size of the remaining unprocessed data.
+  // The size of the remaining unprocessed data.
   @observable
   remaining: number = -1;
 
@@ -36,42 +27,60 @@ export class HashElement extends FASTElement {
   @observable
   elapsed: number = 0;
 
+  // Start time for computation.
+  #started: Date;
+
+  // The worker instance.
+  private worker: Worker;
+
   constructor(file: File) {
     super();
-    this.#started = new Date();
     this.fileName = file.name;
+    this.#started = new Date();
 
-    // Read the file and then start computing the hash.
-    // TODO: We want to "move" this computation into a WebWorker so that it
-    // does not interfere with the rest of the UI.
+    // Create the web worker.
+    this.worker = new Worker(new URL("./hash_worker.ts", import.meta.url), { type: "module" });
+
+    // Listen for messages from the worker.
+    this.worker.onmessage = (event: MessageEvent) => this.handleWorkerMessage(event);
+
+    // Read the file and send its data to the worker for hashing.
     const reader = new FileReader();
     reader.onload = () => {
-      // The result should always be a string in this case.
       const fileData = reader.result as string;
-
-      // At this point, we know how much data we have.
       this.total = fileData.length;
-
-      const hasher = new AsyncSha256();
-      hasher.async_digest(
-        fileData,
-        (hash) => {
-          // We are done.
-          this.hash = hash;
-          this.remaining = 0;
-          this.elapsed = new Date().getTime() - this.#started.getTime();
-        },
-        (remaining) => {
-          // Update progress.
-          this.remaining = remaining;
-          this.elapsed = new Date().getTime() - this.#started.getTime();
-        },
-      );
+      this.worker.postMessage({ fileName: this.fileName, data: fileData });
     };
     reader.readAsText(file);
   }
+
+  /**
+   * Handle messages from the web worker.
+   */
+  private handleWorkerMessage(event: MessageEvent) {
+    const { type, progress, hash } = event.data;
+
+    switch (type) {
+      case "progress":
+        this.remaining = this.total - progress;
+        this.elapsed = new Date().getTime() - this.#started.getTime();
+        break;
+
+      case "complete":
+        this.hash = hash;
+        this.remaining = 0;
+        this.elapsed = new Date().getTime() - this.#started.getTime();
+        this.worker.terminate(); // Cleanup worker.
+        break;
+    }
+  }
+
+  disconnectedCallback() {
+    this.worker.terminate();
+  }
 }
 
+// Template for the element.
 const hashElementTemplate = html<HashElement>`
   <div style="margin-top: 12px;">
     <b>File name:</b> ${(x) => x.fileName}<br />
@@ -88,7 +97,7 @@ const hashElementTemplate = html<HashElement>`
           (x) => x.total > 0,
           html<HashElement>`
             <code
-              >${(x) => Math.ceil((x.total - x.remaining) / 1024 / 1024)} MiB /
+            >${(x) => Math.ceil((x.total - x.remaining) / 1024 / 1024)} MiB /
               ${(x) => Math.ceil(x.total / 1024 / 1024)} MiB</code
             ><br />
           `,
@@ -100,6 +109,7 @@ const hashElementTemplate = html<HashElement>`
   </div>
 `;
 
+// Define the custom element.
 HashElement.define({
   name: "hash-element",
   template: hashElementTemplate,

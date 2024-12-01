@@ -4,9 +4,14 @@ import { AsyncSha256 } from "./sha-256.js";
 // hash digest for a given file. Of course, it is up to you what kind
 // of messages should the worker receive/send.
 
-const hasher = new AsyncSha256();
-hasher.async_digest(
-  "Some data (represented as string)",
-  (hash) => console.log(hash),
-  (remaining) => console.log(remaining),
-);
+// Web Worker setup
+self.onmessage = async (event: MessageEvent) => {
+  const { fileName, data } = event.data;
+  const hasher = new AsyncSha256();
+
+  hasher.async_digest(
+    data,
+    (hash) => self.postMessage({ type: "complete", fileName, hash }),
+    (progress) => self.postMessage({ type: "progress", fileName, progress })
+  );
+};

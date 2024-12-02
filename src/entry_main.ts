@@ -36,19 +36,68 @@ const socket = new WebSocket("ws:socket.zavazadlo.unsigned-short.com");
 socket.onmessage = (m) => {
   console.log(m)
 }
+socket.onopen = () => {
+  console.log("Connected to the WebSocket server.");
 
-// Example of how to use the canvas element:
+};
+
+socket.onclose = () => {
+  console.log("Disconnected from the WebSocket server.");
+};
+
 let canvas = new SocketCanvasElement();
-canvas.width = 128;
-canvas.height = 128;
-canvas.ondraw = (x,y) => {
-  console.log(x,y);
-}
 document.querySelector("#container")!.appendChild(canvas);
 
-// We can only draw into canvas once it is actually shown, hence we postpose the draw operation.
-setTimeout(() => {
-  for (let x=0; x<128; x++) {
-    canvas.setPixel(x,x,true);
+
+// Handle messages from the server
+socket.onmessage = (messageEvent) => {
+  const message = JSON.parse(messageEvent.data);
+  console.log(message);
+
+  if (message.x && message.data && message.data.length === 16384) {
+
+    canvas.width = message.x;
+    canvas.height = message.y;
+
+    setTimeout(() => {
+      for (let y = 0; y < message.y; y++) {
+        for (let x = 0; x < message.x; x++) {
+          const index = y * message.x + x;
+          const value = message.data[index];
+          canvas.setPixel(x, y, !!value );
+        }
+      }
+    },100)
   }
-})
+  else if (Array.isArray(message) && message.every((item) => item.point && typeof item.value === "boolean")) {
+    message.forEach((updateMessage: UpdateMessage) => {
+      const { point, value } = updateMessage;
+      canvas.setPixel(point.x, point.y, value);
+    });
+  }
+};
+
+let isErasing = false; // Track whether the Delete key is pressed
+
+// Listen for keydown and keyup events to toggle erasing mode
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Delete") {
+    isErasing = true;
+    console.log("Erasing mode activated.");
+  }
+});
+
+
+canvas.ondraw = (x,y) => {
+  console.log(`Drawing at (${x}, ${y})`);
+  const point: Point = { x, y };
+  const updateMessage: UpdateMessage = { 
+    point, 
+    value: !isErasing
+  };
+  socket.send(JSON.stringify(updateMessage));
+}
+
+
+
+
